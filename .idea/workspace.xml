@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c2cd6aac-87f0-4362-9300-33ca351ba324" name="Changes" comment="" />
+    <list default="true" id="c2cd6aac-87f0-4362-9300-33ca351ba324" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -37,7 +39,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "/Users/kaps/Documents/projects/react-dss4ren-2/react-theopen",
     "list.type.of.created.stylesheet": "CSS",
     "node.js.detected.package.eslint": "true",
@@ -74,7 +76,7 @@
       <option name="presentableId" value="Default" />
       <updated>1760863601528</updated>
       <workItem from="1760863602962" duration="38000" />
-      <workItem from="1762601394205" duration="14070000" />
+      <workItem from="1762601394205" duration="14735000" />
     </task>
     <servers />
   </component>
