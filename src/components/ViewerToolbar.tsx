@@ -1,27 +1,26 @@
 // src/components/ViewerToolbar.tsx
-import React, { useState } from 'react';
-import * as OBC from '@thatopen/components';
+import React, { useState, useEffect } from 'react';
+import * as OBC from '@thatopen/components'; // <-- Corrected line
 import * as OBF from '@thatopen/components-front';
 import * as FRAGS from '@thatopen/fragments';
 import * as THREE from 'three';
-// ✅ Import the hook
 import { useViewer } from './ViewerContext';
 
 const ViewerToolbar: React.FC = () => {
-    // ✅ Get components and world from the hook
-    const { components, world } = useViewer();
+    const { components, world } = useViewer(); // Hook 1
 
-    const [isGhostMode, setIsGhostMode] = useState(false);
-    const [selectedColor, setSelectedColor] = useState('#bcf124');
-    const [showColorPicker, setShowColorPicker] = useState(false);
+    const [isGhostMode, setIsGhostMode] = useState(false); // Hook 2
+    const [selectedColor, setSelectedColor] = useState('#bcf124'); // Hook 3
+    const [showColorPicker, setShowColorPicker] = useState(false); // Hook 4
+    const [isSimpleCamera, setIsSimpleCamera] = useState(false); // Hook 5
 
-    // ✅ Add guard clause
-    if (!components || !world) return null;
+    useEffect(() => {
+        if (world) {
+            setIsSimpleCamera(world.camera instanceof OBC.SimpleCamera);
+        }
+    }, [world]);
 
-    // ✅ Fix useState initializer
-    const [isSimpleCamera, setIsSimpleCamera] = useState(() => {
-        return world.camera instanceof OBC.SimpleCamera;
-    });
+    if (!components || !world) return null; // Guard clause is after all hooks
 
     const originalColors = new Map<
         FRAGS.BIMMaterial,
@@ -29,12 +28,10 @@ const ViewerToolbar: React.FC = () => {
     >();
 
     const setModelTransparent = () => {
-        // ⛔ Remove: const components = viewerHandler.getComponents();
         const fragments = components.get(OBC.FragmentsManager);
         const materials = [...fragments.core.models.materials.list.values()];
 
         for (const material of materials) {
-            // ... (rest of logic is correct)
             if (material.userData.customId) continue;
             let color: number | undefined;
             if ('color' in material) color = material.color.getHex();
@@ -56,7 +53,6 @@ const ViewerToolbar: React.FC = () => {
 
     const restoreModelMaterials = () => {
         for (const [material, data] of originalColors) {
-            // ... (rest of logic is correct)
             const { color, transparent, opacity } = data;
             material.transparent = transparent;
             material.opacity = opacity;
@@ -74,10 +70,7 @@ const ViewerToolbar: React.FC = () => {
     };
 
     const handleFocus = async () => {
-        // ⛔ Remove: const world = viewerHandler.getWorld();
-        // ⛔ Remove: const components = viewerHandler.getComponents();
         if (!(world.camera instanceof OBC.SimpleCamera)) return;
-
         const highlighter = components.get(OBF.Highlighter);
         const selection = highlighter.selection.select;
         await world.camera.fitToItems(
@@ -86,7 +79,6 @@ const ViewerToolbar: React.FC = () => {
     };
 
     const handleHide = async () => {
-        // ⛔ Remove: const components = viewerHandler.getComponents();
         const highlighter = components.get(OBF.Highlighter);
         const hider = components.get(OBC.Hider);
         const selection = highlighter.selection.select;
@@ -95,7 +87,6 @@ const ViewerToolbar: React.FC = () => {
     };
 
     const handleIsolate = async () => {
-        // ⛔ Remove: const components = viewerHandler.getComponents();
         const highlighter = components.get(OBF.Highlighter);
         const hider = components.get(OBC.Hider);
         const selection = highlighter.selection.select;
@@ -104,18 +95,15 @@ const ViewerToolbar: React.FC = () => {
     };
 
     const handleShowAll = async () => {
-        // ⛔ Remove: const components = viewerHandler.getComponents();
         const hider = components.get(OBC.Hider);
         await hider.set(true);
     };
 
     const handleApplyColor = async () => {
-        // ⛔ Remove: const components = viewerHandler.getComponents();
         const highlighter = components.get(OBF.Highlighter);
         const selection = highlighter.selection.select;
         if (OBC.ModelIdMapUtils.isEmpty(selection)) return;
 
-        // ... (rest of logic is correct)
         const color = new THREE.Color(selectedColor);
         const style = [...highlighter.styles.entries()].find(([, definition]) => {
             if (!definition) return false;
@@ -139,7 +127,6 @@ const ViewerToolbar: React.FC = () => {
         setShowColorPicker(false);
     };
 
-    // ... (Your JSX is correct)
     return (
         <div className="viewer-toolbar">
             <div className="toolbar-section">
