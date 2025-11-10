@@ -11,7 +11,7 @@ interface ViewerContextType {
     isReady: boolean;
     initViewer: (container: HTMLDivElement) => Promise<void>;
     loadIfcModel: (file: File) => Promise<void>;
-    loadFragModel: (file: File) => Promise<void>; // <-- ADDED THIS
+    loadFragModel: (file: File) => Promise<void>;
 }
 
 const ViewerContext = createContext<ViewerContextType>({
@@ -20,7 +20,7 @@ const ViewerContext = createContext<ViewerContextType>({
     isReady: false,
     initViewer: async () => {},
     loadIfcModel: async () => {},
-    loadFragModel: async () => {} // <-- ADDED THIS
+    loadFragModel: async () => {}
 });
 
 export const useViewer = () => useContext(ViewerContext);
@@ -54,7 +54,8 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         newWorld.scene.three.background = new THREE.Color(0x1a1d23);
         newWorld.renderer = new OBC.SimpleRenderer(comps, container);
         newWorld.camera = new OBC.OrthoPerspectiveCamera(comps);
-        newWorld.camera.threePersp.near = 0.01;
+        newWorld.camera.threePersp.near = 1;
+
         newWorld.camera.threePersp.far = 1000;
         newWorld.camera.threePersp.updateProjectionMatrix();
         newWorld.camera.controls.restThreshold = 0.05;
@@ -80,8 +81,12 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const fragments = comps.get(OBC.FragmentsManager);
         await fragments.init('/node_modules/@thatopen/fragments/dist/Worker/worker.mjs');
-
+// redundant safety
         fragments.core.models.materials.list.onItemSet.add(() => {});
+        fragments.list.onItemSet.add(({ value: model }) => {
+
+            model.useCamera = () => {};
+        });
 
         newWorld.camera.projection.onChanged.add(() => {
             for (const [_, model] of fragments.list) {
@@ -93,6 +98,8 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             fragments.core.update(true);
         });
 
+
+
         fragments.list.onItemSet.add(async ({ value: model }) => {
             console.log('Model added:', (model as any).name);
             model.useCamera(newWorld.camera.three);
@@ -100,18 +107,33 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             model.getClippingPlanesEvent = () => {
                 return newWorld.renderer!.clippingPlanes || [];
             };
+
+
+            // Position model on top of the grid
+            const bbox = (model as any).boundingBox;
+            if (bbox) {
+                const min = bbox.min;
+                const offset = -min.y; // Calculate offset to place model on grid (y=0)
+                model.object.position.y = offset;
+            }
+
             newWorld.scene.three.add(model.object);
 
+            // Force immediate full update to load all geometry
+            await fragments.core.update(true);
+
             try {
-                const bbox = (model as any).boundingBox;
                 if (bbox) {
                     const sphere = new THREE.Sphere();
                     bbox.getBoundingSphere(sphere);
+                    sphere.center.y += model.object.position.y; // Adjust camera target for new position
                     await newWorld.camera.controls.fitToSphere(sphere, true);
                 }
             } catch (error) {
                 console.warn('Camera fit failed:', error);
             }
+
+            // Force another update after camera positioning
             await fragments.core.update(true);
         });
 
@@ -207,21 +229,17 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [components, world]);
 
-    // --- NEW FUNCTION ---
-    // This loads a .frag file, which is what your
-    // ProjectSelection component now provides.
     const loadFragModel = useCallback(async (file: File) => {
         if (!components) return;
         const fragments = components.get(OBC.FragmentsManager);
         try {
             const buffer = await file.arrayBuffer();
             const bytes = new Uint8Array(buffer);
-            await fragments.load(bytes); // Use the FragmentsManager to load
+            await fragments.load(bytes);
         } catch (error) {
             console.error('Error loading .frag file:', error);
         }
     }, [components]);
-    // --- END NEW FUNCTION ---
 
     useEffect(() => {
         return () => {
@@ -243,7 +261,7 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isReady,
         initViewer,
         loadIfcModel,
-        loadFragModel // <-- ADDED THIS
+        loadFragModel
     };
 
     return (
