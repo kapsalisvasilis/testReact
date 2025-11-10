@@ -18,7 +18,7 @@
     position: relative; /* For child positioning */
 }
 
-/* Make all "page" components (ProjectSelection, Stats, and the viewer)
+/* Make all "page" components (UseProjectSelectionView, Stats, and the viewer)
   fill the entire <main> area.
 */
 .app-content > * {

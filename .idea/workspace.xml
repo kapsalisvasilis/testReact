@@ -4,10 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c2cd6aac-87f0-4362-9300-33ca351ba324" name="Changes" comment="all">
+    <list default="true" id="c2cd6aac-87f0-4362-9300-33ca351ba324" name="Changes" comment="changes to consant rendering and flickering">
+      <change afterPath="$PROJECT_DIR$/src/pages/project-selection/ProjectSelectionView.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/pages/project-selection/useProjectSelectionView.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ViewerContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ViewerContext.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/project-selection/ProjectSelection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/project-selection/ProjectSelection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +89,7 @@
       <workItem from="1760863602962" duration="38000" />
       <workItem from="1762601394205" duration="17243000" />
       <workItem from="1762711793489" duration="7696000" />
-      <workItem from="1762762158016" duration="7405000" />
+      <workItem from="1762762158016" duration="17743000" />
     </task>
     <task id="LOCAL-00001" summary="all">
       <option name="closed" value="true" />
@@ -103,7 +107,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762629719516</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="changes to consant rendering and flickering">
+      <option name="closed" value="true" />
+      <created>1762772388839</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1762772388839</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -114,7 +126,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -122,6 +146,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="all" />
-    <option name="LAST_COMMIT_MESSAGE" value="all" />
+    <MESSAGE value="changes to consant rendering and flickering" />
+    <option name="LAST_COMMIT_MESSAGE" value="changes to consant rendering and flickering" />
   </component>
 </project>

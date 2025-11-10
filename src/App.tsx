@@ -1,14 +1,14 @@
-// src/App.tsx (Updated)
+// src/App.tsx (Fixed IFC to Viewer Connection)
 
 import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
-// 1. Import Page components
-import ProjectSelection from './pages/project-selection/ProjectSelection';
+// Import Page components
+import ProjectSelection from './pages/project-selection/ProjectSelection.tsx';
 import Stats from './pages/stats/Stats';
 
-// 2. Import Viewer components
+// Import Viewer components
 import { ViewerProvider, useViewer } from './components/ViewerContext';
 import BIMViewer from './components/BimViewer';
 import ViewerToolbar from './components/ViewerToolbar';
@@ -16,18 +16,24 @@ import ModelsPanel from './components/ModelsPanel';
 
 import './App.css';
 
-// Utility component to load the model (No changes)
+// --- !! CORRECTED: This is the original loader for .frag files !! ---
 const ViewerLoader = ({ file }: { file: File | null }) => {
-    const { loadFragModel } = useViewer();
+    const { loadIfcModel } = useViewer(); // Use loadIfcModel instead of loadFragModel
+
     useEffect(() => {
-        if (file && loadFragModel) {
-            console.log('ViewerLoader: Loading frag file...');
-            loadFragModel(file).catch(console.error);
+        if (file && loadIfcModel) {
+            console.log('ViewerLoader: Loading IFC file directly...', file.name);
+            // Check if it's an IFC file
+            if (file.name.toLowerCase().endsWith('.ifc')) {
+                loadIfcModel(file).catch(console.error);
+            } else {
+                console.warn('Unsupported file type:', file.name);
+            }
         }
-    }, [file, loadFragModel]);
+    }, [file, loadIfcModel]);
+
     return null;
 };
-
 
 function App() {
     const [activeView, setActiveView] = useState('project');
@@ -38,17 +44,23 @@ function App() {
         setActiveView(view);
     };
 
-    const handleLoadProject = (fragFile: File) => {
-        console.log('App: Setting file to load and switching to viewer...');
-        setFileToLoad(fragFile);
-        setActiveView('viewer');
+    // Modified to handle IFC files directly
+    const handleLoadProject = (ifcFile: File) => {
+        console.log('App: Received IFC file to load:', ifcFile.name);
+        console.log('App: Switching to viewer and loading IFC model directly...');
+
+        // Set the IFC file
+        setFileToLoad(ifcFile);
+
+        // Switch to viewer view
+        setTimeout(() => {
+            setActiveView('viewer');
+        }, 100);
     };
 
-    // --- HELPER STYLE FUNCTION ---
-    // This creates the style to hide/show a view
+    // Helper style function
     const getViewStyle = (viewName: string): React.CSSProperties => ({
         display: activeView === viewName ? 'block' : 'none',
-        // Make the div fill the <main> container
         height: '100%',
         width: '100%',
         overflow: 'auto'
@@ -59,13 +71,9 @@ function App() {
             <Header activeView={activeView} onViewChange={handleViewChange} />
 
             <main className="app-content">
-
-                {/* --- FIX: All views are now mounted, but hidden with CSS --- */}
-
                 {/* View 1: Project Selection */}
                 <div style={getViewStyle('project')}>
                     <ProjectSelection
-                        onViewChange={handleViewChange}
                         onLoadProject={handleLoadProject}
                         importedFiles={importedFiles}
                         onImportedFilesChange={setImportedFiles}
@@ -74,8 +82,8 @@ function App() {
 
                 {/* View 2: 3D Viewer */}
                 <div style={getViewStyle('viewer')}>
-                    {/* The ViewerProvider is now persistent */}
                     <ViewerProvider>
+                        {/* Pass the IFC file to the loader */}
                         <ViewerLoader file={fileToLoad} />
                         <div className="viewer-ui-container">
                             <ModelsPanel />
@@ -89,7 +97,6 @@ function App() {
                 <div style={getViewStyle('stats')}>
                     <Stats />
                 </div>
-
             </main>
 
             <Footer />
