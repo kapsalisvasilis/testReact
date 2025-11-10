@@ -31,3 +31,6 @@ yarn-error.log*
 
 # XML files (as requested)
 *.xml
+
+.idea/
+/.idea/
