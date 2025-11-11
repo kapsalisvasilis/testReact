@@ -1,7 +1,7 @@
 // src/components/ModelsPanel.tsx
 import React, { useState, useEffect } from 'react';
 import * as OBC from '@thatopen/components';
-import { useViewer } from './ViewerContext';
+import { useViewer } from './ViewerContext.tsx';
 
 interface Model {
     uuid: string;

@@ -19,11 +19,15 @@ const ProjectSelection: React.FC<ProjectSelectionProps> = ({
         isLoading,
         loadError,
         loadingFile,
+        availableProjects,
+        loadingProjects,
+        projectsError,
         backendMessage,
         handleCreateNew,
         handleLoadClick,
         handleFileChange,
         handleProjectSelect,
+        handleLoadApiProject,
     } = useProjectSelection({
         onLoadProject,
         importedFiles,
@@ -36,12 +40,16 @@ const ProjectSelection: React.FC<ProjectSelectionProps> = ({
             isLoading={isLoading}
             loadError={loadError}
             loadingFile={loadingFile}
+            availableProjects={availableProjects}
+            loadingProjects={loadingProjects}
+            projectsError={projectsError}
             backendMessage={backendMessage}
             importedFiles={importedFiles}
             onCreateNew={handleCreateNew}
             onLoadClick={handleLoadClick}
             onFileChange={handleFileChange}
             onProjectSelect={handleProjectSelect}
+            onLoadApiProject={handleLoadApiProject}
         />
     );
 };

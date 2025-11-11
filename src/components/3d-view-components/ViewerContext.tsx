@@ -55,7 +55,6 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         newWorld.renderer = new OBC.SimpleRenderer(comps, container);
         newWorld.camera = new OBC.OrthoPerspectiveCamera(comps);
         newWorld.camera.threePersp.near = 1;
-
         newWorld.camera.threePersp.far = 1000;
         newWorld.camera.threePersp.updateProjectionMatrix();
         newWorld.camera.controls.restThreshold = 0.05;
@@ -64,8 +63,9 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-        comps.init();
+        await comps.init();
 
+        // Initialize components
         new OBC.FragmentsManager(comps);
         new OBC.IfcLoader(comps);
         new OBC.Hider(comps);
@@ -81,60 +81,120 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const fragments = comps.get(OBC.FragmentsManager);
         await fragments.init('/node_modules/@thatopen/fragments/dist/Worker/worker.mjs');
-// redundant safety
-        fragments.core.models.materials.list.onItemSet.add(() => {});
-        fragments.list.onItemSet.add(({ value: model }) => {
-
-            model.useCamera = () => {};
+        // ✅ 1. Get the Hider component here
+        const hider = comps.get(OBC.Hider);
+        // FIX 1: Handle LOD materials properly (critical for rendering all geometry)
+        fragments.core.models.materials.list.onItemSet.add(({ value: material }) => {
+            const isLod = "isLodMaterial" in material && (material as any).isLodMaterial;
+            if (isLod) {
+                console.log('LOD material detected - ensure proper rendering');
+                // Note: SimpleRenderer doesn't have postproduction, but we track LOD materials
+            }
         });
 
+        //FIX 2: Properly handle camera updates for all models
         newWorld.camera.projection.onChanged.add(() => {
             for (const [_, model] of fragments.list) {
                 model.useCamera(newWorld.camera.three);
             }
         });
 
-        newWorld.camera.controls.addEventListener('rest', () => {
-            fragments.core.update(true);
-        });
-
-
+        // newWorld.camera.controls.addEventListener('rest', () => {
+        //     fragments.core.update(true);
+        // });
 
         fragments.list.onItemSet.add(async ({ value: model }) => {
-            console.log('Model added:', (model as any).name);
+            console.log('Model added:', (model as any).name); // This might still log undefined, which is fine
+
+            // Ensure model uses the correct camera
             model.useCamera(newWorld.camera.three);
 
+            // Set up clipping planes properly
             model.getClippingPlanesEvent = () => {
-                return newWorld.renderer!.clippingPlanes || [];
+                // SimpleRenderer stores clipping planes differently
+                const renderer = newWorld.renderer?.three;
+                return (renderer?.clippingPlanes || []) as THREE.Plane[];
             };
 
-
-            // Position model on top of the grid
-            const bbox = (model as any).boundingBox;
-            if (bbox) {
-                const min = bbox.min;
-                const offset = -min.y; // Calculate offset to place model on grid (y=0)
-                model.object.position.y = offset;
-            }
-
+            // 1. Add model to the scene FIRST
             newWorld.scene.three.add(model.object);
 
-            // Force immediate full update to load all geometry
+            // 2. Force updates to process the model and compute its geometry/BBox
             await fragments.core.update(true);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Give system time
+            await fragments.core.update(true);
+            console.log("Model processing complete. Checking for BBox...");
 
+            // 3. NOW read the bounding box
+            // 3. Compute bounding box robustly (with fallback)
+            let bbox = (model as any).boundingBox;
+
+            if (!bbox) {
+                console.warn("Model boundingBox missing — computing manually...");
+                const box = new THREE.Box3().setFromObject(model.object);
+                if (!box.isEmpty()) {
+                    bbox = box;
+                    (model as any).boundingBox = box;
+                }
+            }
+
+            if (bbox && !bbox.isEmpty()) {
+                console.log("BBox found or computed. Positioning model.");
+                const min = bbox.min.clone();
+                const offset = -min.y;
+                model.object.position.y += offset; // ensure it's above grid
+
+                // Optional: recompute bounding box after reposition
+                bbox = new THREE.Box3().setFromObject(model.object);
+                (model as any).boundingBox = bbox;
+            } else {
+                console.warn("BBox still not found or empty. Skipping model positioning.");
+            }
+
+// 4. Fit camera using updated bbox
             try {
-                if (bbox) {
+                if (bbox && !bbox.isEmpty()) {
+                    console.log("Fitting camera to model...");
                     const sphere = new THREE.Sphere();
                     bbox.getBoundingSphere(sphere);
-                    sphere.center.y += model.object.position.y; // Adjust camera target for new position
                     await newWorld.camera.controls.fitToSphere(sphere, true);
+
+                    await new Promise(r => setTimeout(r, 50));
+                    await fragments.core.update(true);
+                    console.log("Camera fit complete.");
+                } else {
+                    console.warn("BBox not found. Skipping camera fit.");
+                }
+            } catch (error) {
+                console.warn("Camera fit failed:", error);
+            }
+
+
+            console.log("Model load complete. Triggering Show All.");
+            await hider.set(true);
+
+            // 5. Fit camera to model (using the same BBox variable)
+            try {
+                if (bbox) {
+                    console.log("Fitting camera to model...");
+                    const sphere = new THREE.Sphere();
+                    bbox.getBoundingSphere(sphere);
+
+                    // IMPORTANT: Adjust the sphere's center by the offset we just applied
+                    sphere.center.y += model.object.position.y;
+
+                    await newWorld.camera.controls.fitToSphere(sphere, true);
+
+                    // Force final update after camera positioning
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    await fragments.core.update(true);
+                    console.log("Camera fit complete.");
+                } else {
+                    console.warn("BBox not found. Skipping camera fit.");
                 }
             } catch (error) {
                 console.warn('Camera fit failed:', error);
             }
-
-            // Force another update after camera positioning
-            await fragments.core.update(true);
         });
 
         const ifcLoader = comps.get(OBC.IfcLoader);
@@ -212,6 +272,7 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setComponents(comps);
         setWorld(newWorld);
+
         setIsReady(true);
         isInitializing.current = false;
         console.log("Viewer is ready!");

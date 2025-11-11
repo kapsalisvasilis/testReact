@@ -1,6 +1,6 @@
 // BimViewer.tsx
 import React, { useEffect, useRef } from 'react';
-import { useViewer } from './ViewerContext';
+import { useViewer } from '../../components/3d-view-components/ViewerContext.tsx';
 
 
 const BIMViewer: React.FC = () => {

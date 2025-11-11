@@ -14,7 +14,8 @@ import {
     Button,
     Loader,
 } from '@mantine/core';
-import { IconPlus, IconUpload, IconList, Icon3dCubeSphere } from '@tabler/icons-react';
+import { IconPlus, IconUpload, IconList, IconUser, Icon3dCubeSphere } from '@tabler/icons-react';
+import { ApiProject } from './useProjectSelectionView';
 
 // --- FeatureCard Component ---
 interface FeatureProps {
@@ -252,18 +253,214 @@ const FileTocCard: React.FC<FileTocCardProps> = ({
     );
 };
 
+// --- ApiProjectTocCard Component ---
+interface ApiProjectTocCardProps {
+    title: string;
+    icon: React.ElementType;
+    projects: ApiProject[];
+    onProjectDoubleClick: (project: ApiProject) => void;
+    isLoading: boolean;
+    loadingProject: string | null;
+    loadError: string | null;
+    loadingProjects: boolean;
+    projectsError: string | null;
+    theme: any;
+    colors: {
+        textColor: string;
+        cardBg: string;
+        accentColor: string;
+        accentColorLight: string;
+    };
+}
+
+const ApiProjectTocCard: React.FC<ApiProjectTocCardProps> = ({
+                                                                 title,
+                                                                 icon: Icon,
+                                                                 projects,
+                                                                 onProjectDoubleClick,
+                                                                 isLoading,
+                                                                 loadingProject,
+                                                                 loadError,
+                                                                 loadingProjects,
+                                                                 projectsError,
+                                                                 theme,
+                                                                 colors: { textColor, cardBg, accentColor, accentColorLight },
+                                                             }) => {
+    const [active, setActive] = useState<number | null>(null);
+
+    const linkHeight = rem(60);
+    const itemMargin = rem(4);
+    const indicatorHeight = rem(30);
+    const indicatorOffset = `calc((${linkHeight} - ${indicatorHeight}) / 2)`;
+
+    const handleItemLoad = (index: number, project: ApiProject) => {
+        setActive(index);
+        onProjectDoubleClick(project);
+    };
+
+    const formatDate = (timestamp: number) => {
+        return new Date(timestamp * 1000).toLocaleDateString();
+    };
+
+    const items = projects.map((project, index) => {
+        const isProjectLoading = isLoading && loadingProject === project.projectName;
+
+        return (
+            <Group
+                key={project.projectUUID}
+                justify="space-between"
+                className="toc-item-group"
+                data-active={active === index || undefined}
+                onClick={() => setActive(index)}
+                onDoubleClick={() => handleItemLoad(index, project)}
+                style={{
+                    height: linkHeight,
+                    marginBottom: itemMargin,
+                    cursor: 'pointer',
+                }}
+            >
+                <Box style={{ flex: 1 }}>
+                    <Text className="toc-item-anchor" fw={500} style={{ lineHeight: 1.2 }}>
+                        {project.projectName}
+                    </Text>
+                    <Text size="xs" c="dimmed" style={{ lineHeight: 1.2 }}>
+                        {formatDate(project.createdAt)} • {project.status}
+                    </Text>
+                </Box>
+
+                {isProjectLoading ? (
+                    <Loader size="xs" color="cyan" />
+                ) : (
+                    <Button
+                        size="xs"
+                        variant="light"
+                        color="cyan"
+                        leftSection={<Icon3dCubeSphere size={14} />}
+                        onClick={() => handleItemLoad(index, project)}
+                        disabled={isLoading}
+                    >
+                        3D View
+                    </Button>
+                )}
+            </Group>
+        );
+    });
+
+    return (
+        <Card
+            shadow="sm"
+            padding="lg"
+            radius="md"
+            withBorder
+            style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${theme.colors.dark[5]}`
+            }}
+        >
+            <style>
+                {`
+                .links-wrapper {
+                    position: relative;
+                }
+                
+                .link-indicator {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: ${rem(4)};
+                    height: ${indicatorHeight};
+                    background-color: ${accentColor};
+                    border-radius: ${theme.radius.sm};
+                    transition: transform 0.2s ease;
+                    z-index: 1;
+                }
+
+                .toc-item-group {
+                    padding: 0 ${rem(12)};
+                    border-radius: ${theme.radius.sm};
+                }
+                
+                .toc-item-group:hover {
+                    background-color: ${theme.colors.dark[7]};
+                }
+
+                .toc-item-group[data-active="true"] {
+                    background-color: ${theme.colors.dark[6]};
+                }
+
+                .toc-item-anchor {
+                    color: ${theme.colors.gray[4]};
+                    font-size: ${theme.fontSizes.sm};
+                    font-weight: 500;
+                    padding: ${rem(4)} ${rem(8)};
+                }
+
+                .toc-item-group[data-active="true"] .toc-item-anchor {
+                    color: ${accentColorLight};
+                    font-weight: 600;
+                }
+                `}
+            </style>
+
+            <Group justify="space-between" mb="md">
+                <Title order={4} c={textColor} style={{ display: 'flex', alignItems: 'center', gap: rem(8) }}>
+                    <Icon style={{ width: rem(20), height: rem(20) }} stroke={1.5} />
+                    {title}
+                    {loadingProjects && <Loader size="sm" />}
+                </Title>
+            </Group>
+            <ScrollArea.Autosize mah={300}>
+                {loadingProjects ? (
+                    <Text c="dimmed" fz="sm" ta="center" p="md">
+                        Loading projects...
+                    </Text>
+                ) : projectsError ? (
+                    <Text c="red" fz="sm" ta="center" p="md">
+                        {projectsError}
+                    </Text>
+                ) : projects.length > 0 ? (
+                    <Box className="links-wrapper">
+                        <Box
+                            className="link-indicator"
+                            style={{
+                                display: active === null ? 'none' : 'block',
+                                transform: `translateY(calc(${active} * (${linkHeight} + ${itemMargin}) + ${indicatorOffset}))`,
+                            }}
+                        />
+                        {items}
+                    </Box>
+                ) : (
+                    <Text c="dimmed" fz="sm" ta="center" p="md">
+                        No projects available.
+                    </Text>
+                )}
+            </ScrollArea.Autosize>
+
+            {loadError && (
+                <Text c="red" fz="sm" ta="center" p="xs" mt="sm">
+                    {loadError}
+                </Text>
+            )}
+        </Card>
+    );
+};
+
 // --- Main Component Props ---
 interface ProjectSelectionViewProps {
     fileInputRef: React.RefObject<HTMLInputElement | null>;
     isLoading: boolean;
     loadError: string | null;
     loadingFile: string | null;
+    availableProjects: ApiProject[];
+    loadingProjects: boolean;
+    projectsError: string | null;
     backendMessage: string;
     importedFiles: File[];
     onCreateNew: () => void;
     onLoadClick: () => void;
     onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onProjectSelect: (file: File) => void;
+    onLoadApiProject: (project: ApiProject) => void;
 }
 
 export const ProjectSelectionView: React.FC<ProjectSelectionViewProps> = ({
@@ -271,12 +468,16 @@ export const ProjectSelectionView: React.FC<ProjectSelectionViewProps> = ({
                                                                               isLoading,
                                                                               loadError,
                                                                               loadingFile,
+                                                                              availableProjects,
+                                                                              loadingProjects,
+                                                                              projectsError,
                                                                               backendMessage,
                                                                               importedFiles,
                                                                               onCreateNew,
                                                                               onLoadClick,
                                                                               onFileChange,
                                                                               onProjectSelect,
+                                                                              onLoadApiProject,
                                                                           }) => {
     const theme = useMantineTheme();
 
@@ -344,6 +545,19 @@ export const ProjectSelectionView: React.FC<ProjectSelectionViewProps> = ({
                             theme={theme}
                             colors={{ textColor, cardBg, accentColor, accentColorLight }}
                         />
+                        <ApiProjectTocCard
+                            title="Available Projects"
+                            icon={IconUser}
+                            projects={availableProjects}
+                            onProjectDoubleClick={onLoadApiProject}
+                            isLoading={isLoading}
+                            loadingProject={loadingFile}
+                            loadError={loadError}
+                            loadingProjects={loadingProjects}
+                            projectsError={projectsError}
+                            theme={theme}
+                            colors={{ textColor, cardBg, accentColor, accentColorLight }}
+                        />
                     </SimpleGrid>
                 </SimpleGrid>
 
@@ -358,7 +572,7 @@ export const ProjectSelectionView: React.FC<ProjectSelectionViewProps> = ({
                             display: 'inline-block'
                         }}
                     >
-                        {backendMessage || 'Ready to load IFC files directly'}
+                        {backendMessage || 'Ready to load projects'}
                     </Text>
                 </Box>
             </Box>

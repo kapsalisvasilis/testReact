@@ -1,18 +1,18 @@
 // src/App.tsx (Fixed IFC to Viewer Connection)
 
 import { useState, useEffect } from 'react';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import Header from './pages/main-layout-components/Header.tsx';
+import Footer from './pages/main-layout-components/Footer.tsx';
 
 // Import Page components
 import ProjectSelection from './pages/project-selection/ProjectSelection.tsx';
 import Stats from './pages/stats/Stats';
 
 // Import Viewer components
-import { ViewerProvider, useViewer } from './components/ViewerContext';
-import BIMViewer from './components/BimViewer';
-import ViewerToolbar from './components/ViewerToolbar';
-import ModelsPanel from './components/ModelsPanel';
+import { ViewerProvider, useViewer } from './components/3d-view-components/ViewerContext.tsx';
+import BIMViewer from './pages/main-layout-components/BimViewer.tsx';
+import ViewerToolbar from './components/3d-view-components/ViewerToolbar.tsx';
+import ModelsPanel from './components/3d-view-components/ModelsPanel.tsx';
 
 import './App.css';
 

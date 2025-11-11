@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import * as OBC from '@thatopen/components';
 // ⛔ No longer need OBF
 // ✅ Import the hook
-import { useViewer } from './ViewerContext';
+import { useViewer } from './ViewerContext.tsx';
 
 // ⛔ Delete junk code from here
 

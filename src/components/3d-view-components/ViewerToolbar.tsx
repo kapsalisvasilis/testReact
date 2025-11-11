@@ -4,7 +4,7 @@ import * as OBC from '@thatopen/components'; // <-- Corrected line
 import * as OBF from '@thatopen/components-front';
 import * as FRAGS from '@thatopen/fragments';
 import * as THREE from 'three';
-import { useViewer } from './ViewerContext';
+import { useViewer } from './ViewerContext.tsx';
 
 const ViewerToolbar: React.FC = () => {
     const { components, world } = useViewer(); // Hook 1

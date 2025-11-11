@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import * as OBC from '@thatopen/components';
 import * as OBF from '@thatopen/components-front';
 // ✅ Import the hook
-import { useViewer } from './ViewerContext';
+import { useViewer } from './ViewerContext.tsx';
 
 const MeasurementTools: React.FC = () => {
     // ✅ Get components from the hook
