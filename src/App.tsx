@@ -11,8 +11,8 @@ import Stats from './pages/stats/Stats';
 // Import Viewer components
 import { ViewerProvider, useViewer } from './components/3d-view-components/ViewerContext.tsx';
 import BIMViewer from './pages/main-layout-components/BimViewer.tsx';
-import ViewerToolbar from './components/3d-view-components/ViewerToolbar.tsx';
-import ModelsPanel from './components/3d-view-components/ModelsPanel.tsx';
+import ViewerToolbar from './components/3d-view-components/BimViewerSettings/ViewerToolbar.tsx';
+import ToolsPanel from './components/3d-view-components/ToolsPanel/ToolsPanel.tsx';
 
 import './App.css';
 
@@ -86,8 +86,7 @@ function App() {
                         {/* Pass the IFC file to the loader */}
                         <ViewerLoader file={fileToLoad} />
                         <div className="viewer-ui-container">
-                            <ModelsPanel />
-                            <ViewerToolbar />
+                            <ToolsPanel />
                             <BIMViewer />
                         </div>
                     </ViewerProvider>
