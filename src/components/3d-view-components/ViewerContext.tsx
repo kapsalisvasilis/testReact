@@ -1,4 +1,4 @@
-// src/components/ViewerContext.tsx
+// src/components/ViewerContext.tsx - FIXED VERSION with Polling
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import * as THREE from 'three';
@@ -9,6 +9,8 @@ interface ViewerContextType {
     components: OBC.Components | null;
     world: OBC.SimpleWorld<OBC.SimpleScene, OBC.OrthoPerspectiveCamera, OBC.SimpleRenderer> | null;
     isReady: boolean;
+    currentModel: any | null;
+    modelReady: boolean;
     initViewer: (container: HTMLDivElement) => Promise<void>;
     loadIfcModel: (file: File) => Promise<void>;
     loadFragModel: (file: File) => Promise<void>;
@@ -18,6 +20,8 @@ const ViewerContext = createContext<ViewerContextType>({
     components: null,
     world: null,
     isReady: false,
+    currentModel: null,
+    modelReady: false,
     initViewer: async () => {},
     loadIfcModel: async () => {},
     loadFragModel: async () => {}
@@ -29,6 +33,8 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [components, setComponents] = useState<OBC.Components | null>(null);
     const [world, setWorld] = useState<OBC.SimpleWorld<OBC.SimpleScene, OBC.OrthoPerspectiveCamera, OBC.SimpleRenderer> | null>(null);
     const [isReady, setIsReady] = useState(false);
+    const [currentModel, setCurrentModel] = useState<any | null>(null);
+    const [modelReady, setModelReady] = useState(false);
 
     const isInitializing = useRef(false);
     const eventListeners = useRef<{ [key: string]: (event: any) => void }>({});
@@ -81,56 +87,59 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const fragments = comps.get(OBC.FragmentsManager);
         await fragments.init('/node_modules/@thatopen/fragments/dist/Worker/worker.mjs');
-        // ✅ 1. Get the Hider component here
+
         const hider = comps.get(OBC.Hider);
-        // FIX 1: Handle LOD materials properly (critical for rendering all geometry)
+
+        // Handle LOD materials
         fragments.core.models.materials.list.onItemSet.add(({ value: material }) => {
             const isLod = "isLodMaterial" in material && (material as any).isLodMaterial;
             if (isLod) {
                 console.log('LOD material detected - ensure proper rendering');
-                // Note: SimpleRenderer doesn't have postproduction, but we track LOD materials
             }
         });
 
-        //FIX 2: Properly handle camera updates for all models
+        // Handle camera updates
         newWorld.camera.projection.onChanged.add(() => {
             for (const [_, model] of fragments.list) {
                 model.useCamera(newWorld.camera.three);
             }
         });
 
-        // newWorld.camera.controls.addEventListener('rest', () => {
-        //     fragments.core.update(true);
-        // });
-
+        // ✅ FIXED: Improved model loading with ready signal
         fragments.list.onItemSet.add(async ({ value: model }) => {
-            console.log('Model added:', (model as any).name); // This might still log undefined, which is fine
+            console.log('Model loading started');
+
+            const fragmentsLocal = comps.get(OBC.FragmentsManager);
+            const modelUuid = Array.from(fragmentsLocal.list.keys()).find(key => fragmentsLocal.list.get(key) === model);
+            if (modelUuid && !(model as any).uuid) {
+                (model as any).uuid = modelUuid;
+                console.log(`Assigned UUID from map key: ${modelUuid}`);
+            }
+
+            setModelReady(false);
 
             // Ensure model uses the correct camera
             model.useCamera(newWorld.camera.three);
 
-            // Set up clipping planes properly
+            // Set up clipping planes
             model.getClippingPlanesEvent = () => {
-                // SimpleRenderer stores clipping planes differently
                 const renderer = newWorld.renderer?.three;
                 return (renderer?.clippingPlanes || []) as THREE.Plane[];
             };
 
-            // 1. Add model to the scene FIRST
+            // Add model to scene
             newWorld.scene.three.add(model.object);
 
-            // 2. Force updates to process the model and compute its geometry/BBox
+            // Force updates to process geometry
             await fragments.core.update(true);
-            await new Promise(resolve => setTimeout(resolve, 100)); // Give system time
+            await new Promise(resolve => setTimeout(resolve, 200));
             await fragments.core.update(true);
-            console.log("Model processing complete. Checking for BBox...");
+            console.log("Model processing complete. Computing bounds...");
 
-            // 3. NOW read the bounding box
-            // 3. Compute bounding box robustly (with fallback)
+            // Compute bounding box
             let bbox = (model as any).boundingBox;
-
             if (!bbox) {
-                console.warn("Model boundingBox missing — computing manually...");
+                console.warn("Model boundingBox missing – computing manually...");
                 const box = new THREE.Box3().setFromObject(model.object);
                 if (!box.isEmpty()) {
                     bbox = box;
@@ -138,63 +147,75 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 }
             }
 
+            // Position model above grid
             if (bbox && !bbox.isEmpty()) {
-                console.log("BBox found or computed. Positioning model.");
+                console.log("BBox found. Positioning model.");
                 const min = bbox.min.clone();
                 const offset = -min.y;
-                model.object.position.y += offset; // ensure it's above grid
+                model.object.position.y += offset;
 
-                // Optional: recompute bounding box after reposition
+                // Recompute bbox after positioning
                 bbox = new THREE.Box3().setFromObject(model.object);
                 (model as any).boundingBox = bbox;
             } else {
-                console.warn("BBox still not found or empty. Skipping model positioning.");
+                console.warn("BBox not found. Skipping positioning.");
             }
 
-// 4. Fit camera using updated bbox
+            // Fit camera to model
             try {
                 if (bbox && !bbox.isEmpty()) {
                     console.log("Fitting camera to model...");
                     const sphere = new THREE.Sphere();
                     bbox.getBoundingSphere(sphere);
-                    await newWorld.camera.controls.fitToSphere(sphere, true);
-
-                    await new Promise(r => setTimeout(r, 50));
-                    await fragments.core.update(true);
-                    console.log("Camera fit complete.");
-                } else {
-                    console.warn("BBox not found. Skipping camera fit.");
-                }
-            } catch (error) {
-                console.warn("Camera fit failed:", error);
-            }
-
-
-            console.log("Model load complete. Triggering Show All.");
-            await hider.set(true);
-
-            // 5. Fit camera to model (using the same BBox variable)
-            try {
-                if (bbox) {
-                    console.log("Fitting camera to model...");
-                    const sphere = new THREE.Sphere();
-                    bbox.getBoundingSphere(sphere);
-
-                    // IMPORTANT: Adjust the sphere's center by the offset we just applied
                     sphere.center.y += model.object.position.y;
-
                     await newWorld.camera.controls.fitToSphere(sphere, true);
-
-                    // Force final update after camera positioning
                     await new Promise(resolve => setTimeout(resolve, 50));
                     await fragments.core.update(true);
                     console.log("Camera fit complete.");
-                } else {
-                    console.warn("BBox not found. Skipping camera fit.");
                 }
             } catch (error) {
                 console.warn('Camera fit failed:', error);
             }
+
+            // Show all and update model state
+            console.log("Model load complete. Triggering Show All.");
+            await hider.set(true);
+
+            // Set current model
+            setCurrentModel(model);
+
+            // ✅✅✅ FIX: Poll for the model UUID before setting 'modelReady'
+            // This ensures the UUID is available before other components try to access it.
+            const pollForUUID = (model: any): Promise<void> => {
+                return new Promise((resolve) => {
+                    if ((model as any).uuid) {
+                        console.log(`Model UUID found: ${(model as any).uuid}`);
+                        resolve();
+                    } else {
+                        console.log("Model UUID not found, polling...");
+                        let attempts = 0;
+                        const interval = setInterval(() => {
+                            attempts++;
+                            if ((model as any).uuid) {
+                                clearInterval(interval);
+                                console.log(`Model UUID found after ${attempts} attempts: ${(model as any).uuid}`);
+                                resolve();
+                            } else if (attempts > 50) { // Timeout after 5 seconds
+                                clearInterval(interval);
+                                console.warn("Timed out waiting for model UUID.");
+                                resolve(); // Resolve anyway, but it might fail
+                            }
+                        }, 100);
+                    }
+                });
+            };
+
+            await pollForUUID(model);
+            // ✅✅✅ END OF FIX
+
+            // Now that we're sure the UUID exists, we can set it as ready.
+            setModelReady(true);
+            console.log("✅ Model ready for category extraction");
         });
 
         const ifcLoader = comps.get(OBC.IfcLoader);
@@ -240,6 +261,7 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             newWorld.camera.controls.fitToSphere(sphere, true).catch(console.error);
         });
 
+        // Event listeners
         eventListeners.current['handleResize'] = () => {
             newWorld.renderer?.resize();
             newWorld.camera.updateAspect();
@@ -272,7 +294,6 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         setComponents(comps);
         setWorld(newWorld);
-
         setIsReady(true);
         isInitializing.current = false;
         console.log("Viewer is ready!");
@@ -280,6 +301,9 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const loadIfcModel = useCallback(async (file: File) => {
         if (!components || !world) return;
+        setModelReady(false);
+        setCurrentModel(null);
+
         const ifcLoader = components.get(OBC.IfcLoader);
         try {
             const buffer = await file.arrayBuffer();
@@ -292,6 +316,9 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const loadFragModel = useCallback(async (file: File) => {
         if (!components) return;
+        setModelReady(false);
+        setCurrentModel(null);
+
         const fragments = components.get(OBC.FragmentsManager);
         try {
             const buffer = await file.arrayBuffer();
@@ -320,6 +347,8 @@ export const ViewerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         components,
         world,
         isReady,
+        currentModel,
+        modelReady,
         initViewer,
         loadIfcModel,
         loadFragModel

@@ -4,20 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c2cd6aac-87f0-4362-9300-33ca351ba324" name="Changes" comment="changes to consant rendering and flickering">
-      <change afterPath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/SearchPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/SelectionPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/ToolsPanel.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/VisibilityPanel.tsx" afterDir="false" />
+    <list default="true" id="c2cd6aac-87f0-4362-9300-33ca351ba324" name="Changes" comment="changes ui category hiding">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/3d-view-components/MeasurementTools.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/3d-view-components/ModelsPanel.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/3d-view-components/ViewerToolbar.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/3d-view-components/ViewportSettings.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/SearchPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/SearchPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/VisibilityPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/VisibilityPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/3d-view-components/ViewerContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/3d-view-components/ViewerContext.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,6 +88,7 @@
       <workItem from="1762601394205" duration="17243000" />
       <workItem from="1762711793489" duration="7696000" />
       <workItem from="1762762158016" duration="17743000" />
+      <workItem from="1763054425070" duration="3572000" />
     </task>
     <task id="LOCAL-00001" summary="all">
       <option name="closed" value="true" />
@@ -122,7 +114,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762772388839</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="changes ui category hiding">
+      <option name="closed" value="true" />
+      <created>1762967043397</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1762967043397</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,21 +154,15 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="all" />
     <MESSAGE value="changes to consant rendering and flickering" />
-    <option name="LAST_COMMIT_MESSAGE" value="changes to consant rendering and flickering" />
+    <MESSAGE value="changes ui category hiding" />
+    <option name="LAST_COMMIT_MESSAGE" value="changes ui category hiding" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/components/3d-view-components/ViewerContext.tsx</url>
-          <line>3</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/src/components/3d-view-components/ToolsPanel/ToolsPanel.tsx</url>
           <line>4</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
